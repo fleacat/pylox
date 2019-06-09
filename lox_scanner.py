@@ -1,8 +1,9 @@
 #
 # Lox interperter
 # following book: 'Crafting Iterpreters'
+# Created by fleacat
 #
-#
+
 import re
 from lox_token import *
 from lox_consumed_list import ConsumedList

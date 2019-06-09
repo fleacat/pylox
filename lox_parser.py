@@ -1,7 +1,7 @@
 #
 # Lox interperter
 # following book: 'Crafting Interpreters'
-#
+# Created by fleacat
 #
 #
 #

@@ -1,7 +1,7 @@
 #
-# Lox interperter 
+# Lox interperter
 # following book: 'Crafting Interpreters'
-#
+# Created by fleacat
 #
 #
 #
@@ -23,20 +23,20 @@ KEYWORDS = set([
 IDENTIFIER = "INDENTIFIER"
 STRING = "STRING"
 NUMERIC = "NUMERIC"
-EOF = "EOF"	
+EOF = "EOF"
 
 class Token:
 	def __init__(self, token_type, linenum, contents=None):
 		self.token_type = token_type
 		self.contents = contents
 		self.linenum = linenum
-		
+
 	def __str__(self):
 		if self.contents is None:
 			return "Token({0})[{1}]".format(self.token_type, self.linenum)
 		else:
 			return "Token({0}, '{1}')[{2}]".format(self.token_type, self.contents, self.linenum)
-		
+
 	def isA(self, token_type):
 		if hasattr(token_type, '__iter__'):
 			return self.token_type in token_type
