@@ -33,65 +33,69 @@ MULT_OPS = set( ['*', '/'] )
 UNARY_OPS = set( ['-', '!'] )
 PRIMARY_TYPES = set( [IDENTIFIER, STRING, NUMERIC, "false", "true", "nil"] )
 
+class Parser:
+	def __init__(self,tokens):
+		self.tokens = ConsumedList(tokens)
 
-def build(tokens):
-	return equality(tokens)
+	def parse(self):
+		return self.expr()
 
-def equality(tokens):
-	expr = comparison(tokens)
-	while tokens.peek().isA(EQUALITY_OPS):
-		op = tokens.consume()
-		right = comparison(tokens)
-		expr=EqualityExpr(expr, op, right)
-	return expr
+	def expr(self):
+		return self.equality()
 
-def comparison(tokens):
-	expr = addition(tokens)
-	while tokens.peek().isA(COMPARISON_OPS):
-		op = tokens.consume()
-		right = addition(tokens)
-		expr = ComparisonExpr(expr, op, right)
-	return expr
+	def equality(self):
+		expr = self.comparison()
+		while self.tokens.peek().isA(EQUALITY_OPS):
+			op = self.tokens.consume()
+			right = self.comparison()
+			expr=EqualityExpr(expr, op, right)
+			return expr
 
-def addition(tokens):
-	expr = multiplication(tokens)
-	while tokens.peek().isA(ADDITION_OPS):
-		op = tokens.consume()
-		right = multiplication(tokens)
-		expr = AdditionExpr(expr, op, right)
-	return expr
+	def comparison(self):
+		expr = self.addition()
+		while self.tokens.peek().isA(COMPARISON_OPS):
+			op = self.tokens.consume()
+			right = self.addition()
+			expr = ComparisonExpr(expr, op, right)
+			return expr
 
-def multiplication(tokens):
-	expr = unary(tokens)
-	while tokens.peek().isA(MULT_OPS):
-		op = tokens.consume()
-		right = unary(tokens)
-		expr = MultiplicationExpr(expr, op, right)
-	return expr
+	def addition(self):
+		expr = self.multiplication()
+		while self.tokens.peek().isA(ADDITION_OPS):
+			op = self.tokens.consume()
+			right = self.multiplication()
+			expr = AdditionExpr(expr, op, right)
+			return expr
 
-def unary(tokens):
-	if tokens.peek().isA(UNARY_OPS):
-		op = tokens.consume()
-		return UnaryExpr(op, unary(tokens))
-	else:
-		return primary(tokens)
+	def multiplication(self):
+		expr = self.unary()
+		while self.tokens.peek().isA(MULT_OPS):
+			op = self.tokens.consume()
+			right = self.unary()
+			expr = MultiplicationExpr(expr, op, right)
+			return expr
 
-
-def primary(tokens):
-	token = tokens.consume()
-	if token.isA(PRIMARY_TYPES):
-		return PrimaryExpr(token)
-	elif token.isA("("):
-		e = build(tokens)
-		end_parens = tokens.consume()
-		if end_parens.isA(")"):
-			return e
+	def unary(self):
+		if self.tokens.peek().isA(UNARY_OPS):
+			op = self.tokens.consume()
+			return UnaryExpr(op, self.unary())
 		else:
-			raise ParseError(
-				"No match found for parenthesis at line {0}".format(token.linenum) )
-	else:
-		raise ParseError(
-			"Expected primary token, but got {0} at line {1}".format(token, token.linenum) )
+			return self.primary()
+
+
+	def primary(self):
+		token = self.tokens.consume()
+		if token.isA(PRIMARY_TYPES):
+			return PrimaryExpr(token)
+		elif token.isA("("):
+			e = self.expr()
+			end_parens = self.tokens.consume()
+			if end_parens.isA(")"):
+				return e
+			else:
+				raise ParseError("No match found for parenthesis at line {0}".format(token.linenum) )
+		else:
+			raise ParseError("Expected primary token, but got {0} at line {1}".format(token, token.linenum) )
 
 
 
@@ -100,13 +104,15 @@ if __name__ == '__main__':
 	from lox_scanner import SourceFile, scanAll
 
 	source = SourceFile("-3 * (3 + 1) == (5 - 10 - 7)")
-	token_list = scanAll(source)
+	tokens = scanAll(source)
 	print("Scanned tokens:")
-	for token in token_list:
+	for token in tokens:
 		print(token)
 	print("")
-	#wrap plain list for parser
-	token_list = ConsumedList(token_list)
+
+	parser = Parser(tokens)
+
+	ast = parser.parse()
 
 	print("Parsed syntax tree:")
 	ast = build(token_list)
